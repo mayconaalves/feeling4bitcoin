@@ -11,9 +11,9 @@ class Listener(StreamListener):
         self.model = TweetModel()
 
     def on_status(self, tweet):
-        print(tweet)
 
-        data = {'coordinates': tweet.coordinates, 'text': tweet.text, 'created_at': tweet.created_at}
+        data = {'text': tweet.text, 'created_at': tweet.created_at}
+        print(data)
         self.model.insert(data)
 
     def on_error(self, status_code):

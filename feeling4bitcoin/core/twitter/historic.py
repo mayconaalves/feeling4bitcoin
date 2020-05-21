@@ -1,7 +1,10 @@
-import tweepy
+import GetOldTweets3 as got;
 
 from core.twitter.credential import Credential
 from data.tweet_model import TweetModel
+from datetime import datetime
+from datetime import timedelta
+import time
 
 
 class Historic:
@@ -9,20 +12,37 @@ class Historic:
     def __init__(self):
         self.credential = Credential()
 
-    def start(self):
+    def start(self, data, fim):
+
+        if data == fim:
+            return
 
         print("start")
         model = TweetModel()
 
-        api = self.credential.api()
-        tweets = tweepy.Cursor(api.search,
-                               q='bitcoin OR satoshi OR BTC',
-                               lang='en').items(50000000)
+        inicio = data
+        data += timedelta(days=1)
 
-        for tweet in tweets:
-            data = {'coordinates': tweet.coordinates, 'text': tweet.text, 'created_at': tweet.created_at}
-            print(data)
-            model.insert(data)
+        print("buscando tweets do dia " + inicio.strftime("%Y-%m-%d") + " até " + data.strftime("%Y-%m-%d"))
+
+        try:
+            criteria = got.manager.TweetCriteria() \
+                .setLang('en') \
+                .setQuerySearch('bitcoin') \
+                .setMaxTweets(1000) \
+                .setSince(inicio.strftime("%Y-%m-%d")).setUntil(data.strftime("%Y-%m-%d"))
+
+            tweets = got.manager.TweetManager.getTweets(criteria)
+
+            for tweet in tweets:
+                json = {'id': tweet.id, 'text': tweet.text, 'created_at': tweet.date}
+                print(json)
+                model.insert(json)
+        except:
+            print("Falha na busca de tweets")
+
+        time.sleep(30)
+        self.start(data, fim)
 
 
-Historic().start()
+Historic().start(datetime(2019, 8, 19), datetime(2020, 1, 1))
